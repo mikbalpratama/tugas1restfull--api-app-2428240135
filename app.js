@@ -49,3 +49,75 @@ function validasi(body) {
     return "Field status harus antre, dikerjakan, atau selesai";
   return null;
 }
+
+// GET /
+// Info API
+app.get("/", (req, res) => {
+  res.json({
+    nama: "ISI_NAMA_KAMU",
+    nim: "ISI_NPM_KAMU",
+    topik: 23,
+    endpoints: [
+      "GET /service-orders",
+      "GET /service-orders/:id",
+      "GET /service-orders?status=antre",
+      "POST /service-orders",
+      "PUT /service-orders/:id",
+      "DELETE /service-orders/:id",
+    ],
+  });
+});
+
+// GET /service-orders
+// GET /service-orders?status=antre  (filter dengan req.query)
+app.get("/service-orders", (req, res) => {
+  const { status } = req.query;
+  if (status) {
+    return res.json(serviceOrders.filter((o) => o.status === status));
+  }
+  res.json(serviceOrders);
+});
+
+// GET /service-orders/1
+app.get("/service-orders/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const order = serviceOrders.find((o) => o.id === id);
+  if (!order) {
+    return res
+      .status(404)
+      .json({
+        status: "error",
+        message: `Data dengan id ${id} tidak ditemukan`,
+        data: null,
+      });
+  }
+  res.json(order);
+});
+
+// POST /service-orders
+// Body: { "platNomor": "B 4321 XYZ", "namaPelanggan": "Hendra Wijaya", "jenisServis": "Ganti oli + tune up", "biaya": 450000, "status": "antre" }
+app.post("/service-orders", (req, res) => {
+  const pesan = validasi(req.body);
+  if (pesan) {
+    return res
+      .status(400)
+      .json({ status: "error", message: pesan, data: null });
+  }
+  const { platNomor, namaPelanggan, jenisServis, biaya, status } = req.body;
+  const baru = {
+    id: nextId++,
+    platNomor,
+    namaPelanggan,
+    jenisServis,
+    biaya,
+    status,
+  };
+  serviceOrders.push(baru);
+  res
+    .status(201)
+    .json({
+      status: "success",
+      message: "Data berhasil ditambahkan",
+      data: baru,
+    });
+});
