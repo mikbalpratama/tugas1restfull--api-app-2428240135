@@ -83,13 +83,11 @@ app.get("/service-orders/:id", (req, res) => {
   const id = parseInt(req.params.id);
   const order = serviceOrders.find((o) => o.id === id);
   if (!order) {
-    return res
-      .status(404)
-      .json({
-        status: "error",
-        message: `Data dengan id ${id} tidak ditemukan`,
-        data: null,
-      });
+    return res.status(404).json({
+      status: "error",
+      message: `Data dengan id ${id} tidak ditemukan`,
+      data: null,
+    });
   }
   res.json(order);
 });
@@ -113,11 +111,77 @@ app.post("/service-orders", (req, res) => {
     status,
   };
   serviceOrders.push(baru);
+  res.status(201).json({
+    status: "success",
+    message: "Data berhasil ditambahkan",
+    data: baru,
+  });
+});
+
+// PUT /service-orders/1
+// Body: { "platNomor": "...", "namaPelanggan": "...", "jenisServis": "...", "biaya": 0, "status": "selesai" }
+app.put("/service-orders/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = serviceOrders.findIndex((o) => o.id === id);
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({
+        status: "error",
+        message: `Data dengan id ${id} tidak ditemukan`,
+        data: null,
+      });
+  }
+  const pesan = validasi(req.body);
+  if (pesan) {
+    return res
+      .status(400)
+      .json({ status: "error", message: pesan, data: null });
+  }
+  const { platNomor, namaPelanggan, jenisServis, biaya, status } = req.body;
+  serviceOrders[index] = {
+    id,
+    platNomor,
+    namaPelanggan,
+    jenisServis,
+    biaya,
+    status,
+  };
   res
-    .status(201)
+    .status(200)
     .json({
       status: "success",
-      message: "Data berhasil ditambahkan",
-      data: baru,
+      message: "Data berhasil diubah",
+      data: serviceOrders[index],
     });
+});
+
+// DELETE /service-orders/1
+app.delete("/service-orders/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = serviceOrders.findIndex((o) => o.id === id);
+  if (index === -1) {
+    return res
+      .status(404)
+      .json({
+        status: "error",
+        message: `Data dengan id ${id} tidak ditemukan`,
+        data: null,
+      });
+  }
+  serviceOrders.splice(index, 1);
+  res
+    .status(200)
+    .json({
+      status: "success",
+      message: `Data order servis dengan id ${id} berhasil dihapus`,
+      data: null,
+    });
+});
+
+// middleware catch-all 404 (harus paling akhir)
+app.use((req, res) => {
+  res
+    .status(404)
+    .json({ status: "error", message: "Endpoint tidak ditemukan", data: null });
 });
